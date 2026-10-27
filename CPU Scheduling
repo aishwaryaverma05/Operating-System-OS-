@@ -1,0 +1,276 @@
+# Phase 4: CPU Scheduling
+
+## 1. What is CPU Scheduling?
+
+CPU scheduling is the process of selecting a process from the ready queue and assigning the CPU to it.
+
+**Why is it needed?**
+- Multiple processes may be ready to execute.
+- Usually, a CPU core executes one process/thread at a time.
+- Scheduling helps use the CPU efficiently and reduce waiting time.
+
+**Example:**  
+Three processes are ready: P1, P2, and P3. The CPU scheduler decides which process runs first.
+
+---
+
+## 2. Important Scheduling Terms
+
+| Term | Meaning |
+|---|---|
+| Arrival Time (AT) | Time when a process enters the ready queue |
+| Burst Time (BT) | Total CPU time required by a process |
+| Completion Time (CT) | Time when a process finishes execution |
+| Turnaround Time (TAT) | Total time from arrival to completion |
+| Waiting Time (WT) | Total time spent waiting in the ready queue |
+| Response Time (RT) | Time from arrival until the process gets the CPU for the first time |
+
+### Important Formulas
+
+**Turnaround Time:**
+
+`TAT = CT - AT`
+
+**Waiting Time:**
+
+`WT = TAT - BT`
+
+**Response Time:**
+
+`RT = First CPU Start Time - AT`
+
+Remember: Waiting time and response time are not always equal.
+
+---
+
+## 3. Preemptive vs Non-Preemptive Scheduling
+
+### Non-Preemptive
+Once a process gets the CPU, it keeps running until it finishes or blocks for I/O.
+
+**Example:** FCFS, non-preemptive SJF.
+
+### Preemptive
+The OS can take the CPU away from a running process and assign it to another process.
+
+**Example:** Round Robin, SRTF.
+
+| Non-Preemptive | Preemptive |
+|---|---|
+| CPU is not forcibly taken away | CPU can be taken away |
+| Simpler to implement | Requires more scheduling decisions |
+| A long process may delay others | Can improve responsiveness |
+| Example: FCFS | Example: Round Robin |
+
+---
+
+## 4. First Come First Serve (FCFS)
+
+Processes execute in the order they arrive.
+
+- Type: Non-preemptive
+- Easy to understand and implement
+- Can cause the convoy effect: short processes wait behind a long process
+
+### Example
+
+All processes arrive at time 0.
+
+| Process | Burst Time |
+|---|---:|
+| P1 | 5 |
+| P2 | 3 |
+| P3 | 2 |
+
+**Gantt Chart**
+
+`0 | P1 | 5 | P2 | 8 | P3 | 10`
+
+| Process | CT | TAT = CT − AT | WT = TAT − BT |
+|---|---:|---:|---:|
+| P1 | 5 | 5 | 0 |
+| P2 | 8 | 8 | 5 |
+| P3 | 10 | 10 | 8 |
+
+Average Waiting Time = `(0 + 5 + 8) / 3 = 4.33`
+
+Average Turnaround Time = `(5 + 8 + 10) / 3 = 7.67`
+
+---
+
+## 5. Shortest Job First (SJF)
+
+The process with the smallest CPU burst time is selected first.
+
+- Type: Non-preemptive (standard SJF)
+- Can minimize average waiting time when burst times are known and the relevant assumptions hold
+- Long processes may suffer starvation
+
+### Example
+
+All processes arrive at time 0.
+
+| Process | Burst Time |
+|---|---:|
+| P1 | 5 |
+| P2 | 3 |
+| P3 | 2 |
+
+**Execution order:** P3 → P2 → P1
+
+**Gantt Chart**
+
+`0 | P3 | 2 | P2 | 5 | P1 | 10`
+
+| Process | CT | TAT | WT |
+|---|---:|---:|---:|
+| P1 | 10 | 10 | 5 |
+| P2 | 5 | 5 | 2 |
+| P3 | 2 | 2 | 0 |
+
+Average Waiting Time = `(5 + 2 + 0) / 3 = 2.33`
+
+SJF gives a lower average waiting time than FCFS in this example.
+
+---
+
+## 6. Shortest Remaining Time First (SRTF)
+
+SRTF is the **preemptive version of SJF**.
+
+The CPU runs the process with the shortest remaining burst time. If a new process arrives with a shorter remaining time, the current process may be preempted.
+
+**Example:**
+- P1 arrives at time 0 with BT = 8.
+- P2 arrives at time 2 with BT = 3.
+
+P1 starts at time 0. When P2 arrives, P1 has 6 units remaining. Since P2 needs only 3 units, P2 preempts P1.
+
+**Key difference:**
+- SJF: once selected, a process normally runs until completion or blocking.
+- SRTF: the running process can be interrupted if another process has a shorter remaining time.
+
+---
+
+## 7. Priority Scheduling
+
+The CPU is assigned to the process with the highest priority.
+
+- Can be preemptive or non-preemptive.
+- In many textbook problems, a smaller priority number means higher priority. Always check the question.
+- Low-priority processes may suffer starvation.
+
+### Solution: Aging
+
+Aging gradually increases the priority of a process that has waited for a long time.
+
+This helps prevent starvation.
+
+---
+
+## 8. Round Robin (RR)
+
+Round Robin gives each process a fixed amount of CPU time called the **time quantum**.
+
+- Type: Preemptive
+- Commonly used to explain time-sharing systems
+- If a process is unfinished after its quantum, it goes to the end of the ready queue.
+
+### Example
+
+All processes arrive at time 0. Time quantum = 2.
+
+| Process | Burst Time |
+|---|---:|
+| P1 | 5 |
+| P2 | 3 |
+| P3 | 1 |
+
+**Gantt Chart**
+
+`0 | P1 | 2 | P2 | 4 | P3 | 5 | P1 | 7 | P2 | 8 | P1 | 9`
+
+| Process | CT | TAT | WT |
+|---|---:|---:|---:|
+| P1 | 9 | 9 | 4 |
+| P2 | 8 | 8 | 5 |
+| P3 | 5 | 5 | 4 |
+
+Average Waiting Time = `(4 + 5 + 4) / 3 = 4.33`
+
+**Effect of time quantum:**
+- Very large quantum: RR behaves more like FCFS.
+- Very small quantum: frequent context switching can add overhead.
+
+---
+
+## 9. Starvation vs Aging vs Convoy Effect
+
+| Concept | Meaning |
+|---|---|
+| Starvation | A process waits indefinitely because other processes keep getting selected |
+| Aging | Gradually raises a waiting process's priority to reduce starvation |
+| Convoy effect | Short processes wait behind a long process, commonly in FCFS |
+
+---
+
+## 10. Which Algorithm Should You Remember?
+
+| Algorithm | Preemptive? | Main idea |
+|---|---|---|
+| FCFS | No | First arrival runs first |
+| SJF | No | Smallest burst time first |
+| SRTF | Yes | Smallest remaining time first |
+| Priority | Both possible | Highest-priority process first |
+| Round Robin | Yes | Fixed time quantum for each process |
+
+---
+
+## 11. Common Placement Interview Questions
+
+**Q1. What is CPU scheduling?**  
+It selects a process from the ready queue to execute on the CPU.
+
+**Q2. What is the difference between SJF and SRTF?**  
+SJF is non-preemptive, while SRTF is preemptive and considers remaining burst time.
+
+**Q3. Which algorithm can cause the convoy effect?**  
+FCFS.
+
+**Q4. Which algorithm can cause starvation?**  
+SJF and Priority Scheduling can cause starvation.
+
+**Q5. How can starvation be reduced?**  
+By using aging.
+
+**Q6. What happens when the Round Robin time quantum is very large?**  
+Round Robin behaves more like FCFS.
+
+**Q7. What is response time?**  
+The time from a process's arrival until it first gets the CPU.
+
+**Q8. What is the difference between waiting time and turnaround time?**  
+Turnaround time is total time spent in the system after arrival; waiting time is time spent waiting in the ready queue.
+
+**Q9. Which scheduling algorithm gives the minimum average waiting time?**  
+SJF is optimal under the standard assumptions when burst times are known; its preemptive counterpart is SRTF.
+
+**Q10. Why is context switching an overhead?**  
+The OS must save and restore execution state, which takes time that does not directly advance the process's work.
+
+---
+
+## 12. Placement Practice Checklist
+
+Before moving to the next phase, make sure you can:
+
+- [ ] Define AT, BT, CT, TAT, WT, and RT.
+- [ ] Calculate TAT, WT, and RT using formulas.
+- [ ] Draw a Gantt chart for FCFS.
+- [ ] Solve SJF and SRTF questions.
+- [ ] Solve Priority Scheduling questions.
+- [ ] Solve Round Robin questions for a given time quantum.
+- [ ] Explain starvation, aging, and the convoy effect.
+- [ ] Compare preemptive and non-preemptive scheduling.
+
+**Placement priority:** Practise Gantt charts and numericals for all five algorithms. Understanding the definitions alone is not enough for this phase.
