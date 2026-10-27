@@ -1,0 +1,280 @@
+# Phase 5: Process Synchronization
+
+## 1. What Is Process Synchronization?
+
+Process synchronization coordinates multiple processes or threads that access shared data or resources.
+
+**Why is it needed?**
+
+When multiple threads access and modify shared data at the same time, the result may become incorrect.
+
+**Example:**
+
+Suppose two threads update the same bank balance. Synchronization helps prevent their operations from interfering with each other.
+
+---
+
+## 2. Race Condition
+
+A **race condition** occurs when the result depends on the timing or order of concurrent operations accessing shared data.
+
+### Example
+
+Suppose `balance = 1000`.
+
+Two threads withdraw ₹200 at the same time.
+
+Both threads read the original balance before either writes the updated value.
+
+- Thread A reads 1000 and calculates 800.
+- Thread B reads 1000 and calculates 800.
+- Both write 800.
+
+Final balance = ₹800 instead of ₹600.
+
+This happens because the operations were not properly synchronized.
+
+**How to prevent it:** Use synchronization mechanisms such as mutexes or appropriate atomic operations.
+
+---
+
+## 3. Critical Section
+
+A **critical section** is the part of a program where shared data or resources are accessed.
+
+Only one thread should execute a particular critical section at a time when exclusive access is required.
+
+### Structure
+
+```text
+Entry Section
+      |
+      v
+Critical Section
+      |
+      v
+Exit Section
+      |
+      v
+Remainder Section
+```
+
+- **Entry section:** Requests permission to enter.
+- **Critical section:** Accesses shared data.
+- **Exit section:** Releases access.
+- **Remainder section:** Performs other work.
+
+### Three Requirements of a Correct Critical-Section Solution
+
+1. **Mutual Exclusion:** Only one process/thread can be inside the protected critical section at a time.
+2. **Progress:** If the critical section is free and some processes want to enter, the decision about who enters should not be postponed indefinitely.
+3. **Bounded Waiting:** A process should not wait indefinitely to enter after requesting access, under the assumptions of the solution.
+
+These three terms are frequently asked in interviews.
+
+---
+
+## 4. Mutex
+
+A **mutex (mutual exclusion lock)** allows only one thread at a time to access a protected resource.
+
+### How It Works
+
+1. A thread locks the mutex.
+2. It accesses the shared resource.
+3. It unlocks the mutex.
+4. Another thread can acquire the lock.
+
+### Example
+
+```python
+lock.acquire()
+
+try:
+    # Access or update shared data
+    pass
+finally:
+    lock.release()
+```
+
+This is illustrative Python-style pseudocode; real code should protect the specific shared operation.
+
+**Important:** If a thread forgets to release a lock, other threads may remain blocked.
+
+---
+
+## 5. Semaphore
+
+A **semaphore** is a synchronization mechanism that maintains a counter to control access to resources.
+
+There are two common types:
+
+### Binary Semaphore
+
+Its value is typically 0 or 1. It can be used to coordinate access or signal an event.
+
+### Counting Semaphore
+
+Its counter represents the number of available instances of a resource.
+
+**Example:** A server has 3 identical resources. A counting semaphore initialized to 3 can limit access to three concurrent users, assuming each user acquires and releases it correctly.
+
+### Basic Operations
+
+- **wait (P/down):** Attempts to acquire a permit; may block if none is available.
+- **signal (V/up):** Releases a permit or signals availability.
+
+---
+
+## 6. Mutex vs Semaphore
+
+| Mutex | Semaphore |
+|---|---|
+| Commonly used for exclusive access to a resource | Used to control access to resources or coordinate events |
+| Has ownership semantics in common implementations | Generally does not have the same ownership requirement |
+| Typically protects one critical section at a time | A counting semaphore can allow multiple concurrent accesses |
+| Lock/unlock operations | Wait/signal operations |
+
+**Interview trap:** A binary semaphore and a mutex are not exactly the same. Their ownership and usage semantics differ.
+
+---
+
+## 7. Producer-Consumer Problem
+
+The producer creates data, and the consumer processes it. They share a bounded buffer.
+
+**Problem:** The producer must not add data when the buffer is full, and the consumer must not remove data when it is empty.
+
+A common semaphore-based solution uses:
+
+- `empty`: number of empty buffer slots.
+- `full`: number of occupied buffer slots.
+- `mutex`: protects the shared buffer.
+
+For a buffer of size `N`, initially:
+
+```text
+empty = N
+full = 0
+mutex = 1
+```
+
+### Producer's Basic Logic
+
+```text
+wait(empty)
+wait(mutex)
+
+Add item to buffer
+
+signal(mutex)
+signal(full)
+```
+
+### Consumer's Basic Logic
+
+```text
+wait(full)
+wait(mutex)
+
+Remove item from buffer
+
+signal(mutex)
+signal(empty)
+```
+
+The order matters. The producer waits for an empty slot before modifying the buffer; the consumer waits for an available item.
+
+---
+
+## 8. Readers-Writers Problem
+
+Multiple readers and writers access shared data.
+
+- Multiple readers can usually read simultaneously.
+- A writer generally needs exclusive access.
+- A writer must not modify the data while readers or other writers are accessing it.
+
+**Example:** Many users view a database record, while an administrator updates it.
+
+Different solutions may prioritize readers, writers, or fairness. A solution that continually favors readers may cause writer starvation.
+
+---
+
+## 9. Dining Philosophers Problem
+
+Several philosophers sit around a table. Each needs two shared forks to eat.
+
+**Problem:** If every philosopher picks up one fork and waits for the other, everyone may wait forever. This is a deadlock scenario.
+
+**Possible solutions:**
+- Allow only a limited number of philosophers to try eating simultaneously.
+- Require forks to be acquired in a consistent order.
+- Use a waiter or another coordination mechanism.
+
+This problem illustrates synchronization challenges and deadlock.
+
+---
+
+## 10. Common Synchronization Problems
+
+### Race Condition
+Concurrent operations interfere and produce an incorrect result.
+
+### Deadlock
+Processes or threads wait indefinitely for resources held by one another.
+
+### Starvation
+A process or thread waits indefinitely because others keep getting access.
+
+### Busy Waiting
+A thread repeatedly checks a condition instead of sleeping or blocking, potentially wasting CPU time.
+
+---
+
+## 11. Important Interview Questions
+
+**Q1. What is a race condition?**  
+A race condition occurs when the outcome depends on the timing or order of concurrent operations on shared data.
+
+**Q2. What is a critical section?**  
+It is the part of code that accesses shared data or resources and may require protection.
+
+**Q3. What are the three requirements of a critical-section solution?**  
+Mutual exclusion, progress and bounded waiting.
+
+**Q4. What is a mutex?**  
+A lock used to provide exclusive access to a protected resource.
+
+**Q5. What is a semaphore?**  
+A synchronization mechanism that uses permits or a counter to control resource access or coordinate execution.
+
+**Q6. What is the difference between a binary and counting semaphore?**  
+A binary semaphore has two basic states; a counting semaphore tracks multiple available permits.
+
+**Q7. What is the producer-consumer problem?**  
+It is a synchronization problem in which producers add items to a shared buffer and consumers remove them.
+
+**Q8. Can multiple readers access shared data simultaneously?**  
+Yes, if no writer is modifying the data and the synchronization design allows concurrent reads.
+
+**Q9. What is busy waiting?**  
+Repeatedly checking a condition while using CPU time instead of blocking.
+
+**Q10. What is the difference between deadlock and starvation?**  
+Deadlock involves processes being stuck waiting on one another or a resource cycle. Starvation occurs when a process keeps being denied the resources or access it needs.
+
+---
+
+## 12. Placement Revision Checklist
+
+- [ ] Explain race conditions with an example.
+- [ ] Define critical section and its three requirements.
+- [ ] Explain mutex and semaphore.
+- [ ] Differentiate binary and counting semaphores.
+- [ ] Understand producer-consumer synchronization.
+- [ ] Explain the readers-writers problem.
+- [ ] Explain the dining philosophers problem.
+- [ ] Differentiate deadlock, starvation and busy waiting.
+
+**Placement priority:** Race condition, critical section, mutex vs semaphore, and producer-consumer are the first topics to revise.
